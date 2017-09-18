@@ -10,6 +10,7 @@
 import numpy as np
 import keras.models
 from src.preprocess.load_ct import load_ct, MetaData
+from .src.models.LR3DCNN import predictor
 
 
 def predict(dicom_path, centroids, model_path=None,

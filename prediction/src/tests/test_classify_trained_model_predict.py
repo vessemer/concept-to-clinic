@@ -2,6 +2,7 @@ import pytest
 
 from ..algorithms.classify import trained_model
 from ..algorithms.classify.src.preprocess_patch import preprocess_LR3DCNN
+from ..algorithms.classify.src.models.LR3DCNN import predictor
 from ..preprocess import preprocess_ct
 
 
@@ -24,6 +25,11 @@ def test_classify_predict_model_load(dicom_path, model_path):
                                       preprocess_model_input=preprocess_LR3DCNN)
 
     assert len(predicted) == 0
+
+
+def test_classify_predict_model_compile():
+    model = predictor()
+    model.compile('adam', 'categorical_crossentropy')
 
 
 def test_classify_predict_inference(dicom_path, model_path):
