@@ -1,32 +1,13 @@
-import numpy as np
-import torch
-from src.preprocess import load_ct, preprocess_ct, crop_patches
-from torch import nn
-from torch.autograd import Variable
-
-""""
-Classification model from team gtr123
-Code adapted from https://github.com/lfz/DSB2017
 """
-config = {}
+The architecture of classification Net from the gtr123 team
+part of the Winning algorithm for DSB2017
 
-config['crop_size'] = [96, 96, 96]
-config['scaleLim'] = [0.85, 1.15]
-config['radiusLim'] = [6, 100]
+code was adopted from https://github.com/lfz/DSB2017
+"""
+import torch
+from torch import nn
 
-config['stride'] = 4
-
-config['detect_th'] = 0.05
-config['conf_th'] = -1
-config['nms_th'] = 0.05
-config['filling_value'] = 160
-
-config['startepoch'] = 20
-config['lr_stage'] = np.array([50, 100, 140, 160])
-config['lr'] = [0.01, 0.001, 0.0001, 0.00001]
-config['miss_ratio'] = 1
-config['miss_thresh'] = 0.03
-config['anchors'] = [10, 30, 60]
+from .configuration import config
 
 
 class PostRes(nn.Module):
@@ -219,45 +200,3 @@ class CaseNet(nn.Module):
         base_prob = torch.sigmoid(self.baseline)
         casePred = 1 - torch.prod(1 - out, dim=1) * (1 - base_prob.expand(out.size()[0]))
         return nodulePred, casePred, out
-
-
-def predict(ct_path, nodule_list, model_path="src/algorithms/classify/assets/gtr123_model.ckpt"):
-    """
-
-    Args:
-      ct_path (str): path to a MetaImage or DICOM data.
-      nodule_list: List of nodules
-      model_path: Path to the torch model (Default value = "src/algorithms/classify/assets/gtr123_model.ckpt")
-
-    Returns:
-      List of nodules, and probabilities
-
-    """
-    if not nodule_list:
-        return []
-    casenet = CaseNet()
-
-    casenet.load_state_dict(torch.load(model_path))
-    casenet.eval()
-
-    if torch.cuda.is_available():
-        casenet = torch.nn.DataParallel(casenet).cuda()
-    # else:
-        # casenet = torch.nn.parallel.DistributedDataParallel(casenet)
-
-    preprocess = preprocess_ct.PreprocessCT(clip_lower=-1200., clip_upper=600., spacing=1., order=1,
-                                            min_max_normalize=True, scale=255, dtype='uint8')
-    ct_array, meta = preprocess(*load_ct.load_ct(ct_path))
-    patches = crop_patches.patches_from_ct(ct_array, meta, config['crop_size'], nodule_list,
-                                           stride=config['stride'], pad_value=config['filling_value'])
-    results = []
-    for nodule, (cropped_image, coords) in zip(nodule_list, patches):
-        cropped_image = Variable(torch.from_numpy(cropped_image[np.newaxis, np.newaxis]).float())
-        cropped_image.volatile = True
-        coords = Variable(torch.from_numpy(coords[np.newaxis]).float())
-        coords.volatile = True
-        _, pred, _ = casenet(cropped_image, coords)
-        results.append(
-            {"x": nodule["x"], "y": nodule["y"], "z": nodule["z"], "p_concerning": float(pred.data.cpu().numpy())})
-
-    return results

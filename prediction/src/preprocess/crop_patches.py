@@ -102,7 +102,7 @@ def patches_from_ct(ct_array, meta, patch_shape=None, centroids=None, stride=Non
         pad_value (int): value with which an array padding will be performed.
 
     Yields:
-        np.ndarray: a cropped patch from the CT scan.
+        list[np.ndarray]: a cropped patch from the CT scan.
     """
     if patch_shape is None:
         patch_shape = []

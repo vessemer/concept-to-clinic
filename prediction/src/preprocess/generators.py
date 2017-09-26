@@ -325,7 +325,7 @@ class DataGenerator(object):
         if data_format == 'channels_first':
             self.channel_axis = 1
         if data_format == 'channels_last':
-            self.channel_axis = 4
+            self.channel_axis = -1
 
         self.mean = None
         self.std = None
@@ -538,7 +538,7 @@ class DataGenerator(object):
                     ax[i + r * x.shape[0]] = self.random_transform(x[i])
             x = ax
 
-        axis = tuple(i for i in range(len(x.shape)) if i != self.channel_axis)
+        axis = tuple(i for i, el in enumerate(x.shape) if i != self.channel_axis)
         if self.featurewise_center:
             self.mean = np.mean(x, axis=axis)
             broadcast_shape = [1, 1, 1, 1]

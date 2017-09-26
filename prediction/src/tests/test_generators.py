@@ -110,7 +110,8 @@ def test_generators_standardization(ct_path):
     dg = generators.DataGenerator(featurewise_center=True,
                                   featurewise_std_normalization=True,
                                   samplewise_center=True,
-                                  samplewise_std_normalization=True)
+                                  samplewise_std_normalization=True,
+                                  data_format='channels_first')
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
